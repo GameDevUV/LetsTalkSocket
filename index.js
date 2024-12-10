@@ -22,6 +22,8 @@ let io = Socketio(httpserver, {
     }
 });
 
+let onlineUsers = [];
+
 io.on('connection', (socket) => {
     console.log("app is conecte to live socket", socket.id);
 
@@ -34,15 +36,13 @@ io.on('connection', (socket) => {
 
     socket.on("joinRoom", ({ chatId }, callback) => {
         console.log(`Socket ${socket.id} joining room: ${chatId}`);
-    
         // Join the room
         socket.join(chatId);
-    
         // Send acknowledgment to the client
         if (callback) {
-          callback({ status: "ok", message: `Joined room ${chatId}` });
+            callback({ status: "ok", message: `Joined room ${chatId}` });
         }
-      });
+    });
 
     socket.on('sendMessage', (payload) => {
         let { userName, message, chatId, toUserName } = payload
@@ -54,11 +54,11 @@ io.on('connection', (socket) => {
             toUserName: payload.toUserName
         }).then((resp) => {
 
-            io.to(chatId).emit("newMessage", {
-                message: message,
+            io.emit("newMessage", {
+                content: message,
                 chatId: chatId,
                 senderId: userName
-            } , (response)=>{
+            }, (response) => {
                 console.log("message sent to room: ", chatId)
             });
 
@@ -67,13 +67,9 @@ io.on('connection', (socket) => {
         })
     })
 
-    socket.on('haveMessage' , (payload)=>{
-        // const user = getUser(socket.id)
-        // console.log(user.room);
-        console.log("new message got : " , "from Chat Id: ", payload.chatId);
-        // io.emit("getMessage" , {message : payload.msg});
-        // io.in(chatId).emit("getMessage" , {message : payload.msg});
-        io.to(payload.chatId).emit("getMessage" , {message : payload.msg} , (response)=>{
+    socket.on('haveMessage', (payload) => {
+        console.log("new message got : ", "from Chat Id: ", payload.chatId);
+        io.emit("getMessage", { message: payload.msg }, (response) => {
             console.log("message sent");
         });
     })
