@@ -1,3 +1,4 @@
+require('dotenv').config();
 // creating app instance of express
 const app = require('express')();
 // creating http server
@@ -14,6 +15,8 @@ app.get('/', (req, resp) => {
 
 const users = [];
 
+let API = process.env.SERVER_API;
+
 // socket code
 
 let io = Socketio(httpserver, {
@@ -25,7 +28,7 @@ let io = Socketio(httpserver, {
 let onlineUsers = [];
 // set status for user is online or offline
 const setOnline = (userName, status) => {
-    axios.put('http://localhost:5000/user/status', {
+    axios.put(`${API}user/status`, {
         userName,
         status
     }).then((resp) => {
@@ -39,6 +42,7 @@ io.on('connection', (socket) => {
     socket.on('setOnline', (payload) => {
         userName = payload.userName
         setOnline(payload.userName , "ONLINE")
+        io.emit('refresh' , {refresh: true})
     })
 
     console.log("app is conecte to live socket", socket.id);
@@ -59,7 +63,7 @@ io.on('connection', (socket) => {
     socket.on('sendMessage', (payload) => {
         let { userName, message, chatId, toUserName } = payload
 
-        axios.post(`http://localhost:5000/chat/sendmessage`, {
+        axios.post(`${API}chat/sendmessage`, {
             senderId: payload.userName,
             content: payload.message,
             chatId: payload.chatId,
@@ -88,6 +92,7 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         setOnline(userName , "OFFLINE")
+        io.emit('refresh' , {refresh: true})
     })
 })
 
