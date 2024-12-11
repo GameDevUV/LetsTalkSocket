@@ -23,17 +23,29 @@ let io = Socketio(httpserver, {
 });
 
 let onlineUsers = [];
+// set status for user is online or offline
+const setOnline = (userName, status) => {
+    axios.put('http://localhost:5000/user/status', {
+        userName,
+        status
+    }).then((resp) => {
+    }).catch((e) => {
+    })
+}
 
 io.on('connection', (socket) => {
+    
+    let userName ;
+    socket.on('setOnline', (payload) => {
+        userName = payload.userName
+        setOnline(payload.userName , "ONLINE")
+    })
+
     console.log("app is conecte to live socket", socket.id);
 
-    let userName;
     socket.on('sendDetails', (payload) => {
         userName = payload.userName;
     })
-
-    socket.emit('online', { status: "ONLINE" })
-
     socket.on("joinRoom", ({ chatId }, callback) => {
         console.log(`Socket ${socket.id} joining room: ${chatId}`);
         // Join the room
@@ -74,19 +86,8 @@ io.on('connection', (socket) => {
         });
     })
 
-
-
     socket.on('disconnect', () => {
-        axios.put('http://localhost:5000/user/status', {
-            // change user name dynamically by using emits
-            userName: 'vsgamer9595',
-            status: 'OFFLINE'
-        }).then((resp) => {
-            // console.log("send : ", resp);
-            console.log("user left")
-        }).catch((e) => {
-            console.log("error in send", e.response ? e.response.data : e.message);
-        })
+        setOnline(userName , "OFFLINE")
     })
 })
 
@@ -96,7 +97,3 @@ io.on('connection', (socket) => {
 httpserver.listen(4000, () => {
     // console.log("app is listining at : 4000")
 })
-
-// emit for send data
-// on for perform some task after the emit function
-// both can be on server side or client side
