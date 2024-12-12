@@ -9,6 +9,7 @@ const cors = require('cors')
 const axios = require('axios');
 const { response } = require('express');
 app.use(cors());
+
 // getting app
 app.get('/', (req, resp) => {
 })
@@ -96,9 +97,9 @@ io.on('connection', (socket) => {
     })
 })
 
-
+let port = process.env.PORT || 4000
 
 // listning app
-httpserver.listen(4000, () => {
+httpserver.listen(port, () => {
     // console.log("app is listining at : 4000")
 })
